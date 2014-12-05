@@ -33,10 +33,14 @@ Private Sub AddDictItem(ByVal parent As Object, ByVal keys As Collection, ByVal 
     End If
 End Sub
 
+Private Function SplitAddress(ref As String)
+    SplitAddress = Split(Mid(ref, 2, Len(ref) - 2), "!")
+End Function
+
 Private Function GetReferencedValue(ByVal sheet As Worksheet, ref As String)
     Dim adr, row As Integer, col As Integer
-    adr = Split(Mid(ref, 2, Len(ref) - 2), "!")
-    If UBound(adr) = 1 Then
+    adr = SplitAddress(ref)
+    If UBound(adr) >= 1 Then
         If adr(0) <> "" Then
             Set sheet = Worksheets(adr(0))
         End If
@@ -54,11 +58,21 @@ Private Function GetReferencedValue(ByVal sheet As Worksheet, ref As String)
     Set GetReferencedValue = GetDictArray(sheet, row, col)
 End Function
 
+Private Function GetIndex(ByVal ref As String)
+    Dim adr
+    adr = SplitAddress(ref)
+    If UBound(adr) >= 2 Then
+        GetIndex = adr(2)
+    Else
+        GetIndex = "1"
+    End If
+End Function
+
 Private Function GetValue(ByVal sheet As Worksheet, ByVal val As String) As Variant
     If Left(val, 1) = "[" And Right(val, 1) = "]" Then
         Set GetValue = GetReferencedValue(sheet, val)
     ElseIf Left(val, 1) = "{" And Right(val, 1) = "}" Then
-        Set GetValue = GetReferencedValue(sheet, val)("1")
+        Set GetValue = GetReferencedValue(sheet, val)(GetIndex(val))
     Else
         GetValue = val
     End If
